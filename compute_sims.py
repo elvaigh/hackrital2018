@@ -23,7 +23,7 @@ def meanSim(text,title):
 	for v in text:s+=sim(v,title)
 	return s/len(text)
 from gensim.models.wrappers import FastText
-model = FastText.load_fasttext_format('/home/celvaigh/these/divers/wiki.fr/wiki.fr.bin')
+#model = FastText.load_fasttext_format('/home/celvaigh/these/divers/wiki.fr/wiki.fr.bin')
 
 fr="wiki.fr.bin"
 en="wiki.en.bin"
