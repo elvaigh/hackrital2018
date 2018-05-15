@@ -1,14 +1,14 @@
 import pandas as pd
 import numpy as np
-
-#for name in ['hackathon-train/train/storyzy_en_train.tsv','hackathon-train/train/storyzy_fr_train.tsv','hackathon-train/train/storyzy_yt_train.tsv']:countTrusted(name)
-
+from os.path import basename
+from scipy import spatial
 def MWV(text,model):
+	if not type(text) is str:return np.zeros(300)
 	text=text.split()
 	tmp=np.zeros(300)
 	for i in text:
-		try:tmp=np.add(tmp,model.wv[i])
-		except:pass
+			try:tmp=np.add(tmp,model.wv[i])
+			except:pass
 	return tmp/len(text)
 def ensText(text,model):
 	text=text.split()
@@ -17,14 +17,13 @@ def ensText(text,model):
 			try:tmp+=[model.wv[i]]
 			except:pass
 	return tmp
-
+def sim(a,b):return 1 - spatial.distance.cosine(a, b)
 def meanSim(text,title):
 	s=0
 	for v in text:s+=sim(v,title)
-	return s/len(text)
+	return s/(1+len(text))
 from gensim.models.wrappers import FastText
-#model = FastText.load_fasttext_format('/home/celvaigh/these/divers/wiki.fr/wiki.fr.bin')
-
+model = FastText.load_fasttext_format('/home/celvaigh/these/divers/wiki.fr/wiki.fr.bin')
 fr="wiki.fr.bin"
 en="wiki.en.bin"
 #model = word_vectors = KeyedVectors.load_word2vec_format('/home/celvaigh/these/divers/wiki.fr/wiki.fr.bin', binary=True)
@@ -40,5 +39,33 @@ def computeCorpusSims(name,lg):
 	sims.sort()
 	return sims
 
-computeCorpusSims('hackathon-train/train/storyzy_fr_train.tsv',"fr")
-	
+def computeCorpusSims(name):
+	data=pd.read_csv(name, sep='\t')
+	texts=data["text"]
+	if not "yt" in name:titles=data["title"]
+	else:titles=data["video-title"]
+	size=len(texts)
+	sims=[]
+	for i in range(size):sims+=[meanSim(ensText(texts[i],model),MWV(titles[i],model))]
+	return sims
+filenam='../test2/storyzy_en_test2.tsv'
+sims=computeCorpusSims(filenam)
+a,b=basename(filenam).split(".")
+filenam="../"+a+"_sim_texte_titre.txt"
+with open(filenam,"w+") as f:
+	f.write("sim_texte_tittre\n")
+	for i in sims:f.write("%s\n" % i)
+"""filenam='../test2/storyzy_fr_test2.tsv'
+sims=computeCorpusSims(filenam)
+a,b=basename(filenam).split(".")
+filenam="../"+a+"_sim_texte_titre.txt"
+with open(filenam,"w+") as f:
+	f.write("sim_texte_tittre\n")
+	for i in sims:f.write("%s\n" % i)
+filenam='../test2/storyzy_yt_test2.tsv'
+sims=computeCorpusSims(filenam)
+a,b=basename(filenam).split(".")
+filenam="../"+a+"_sim_texte_titre.txt"
+with open(filenam,"w+") as f:
+	f.write("sim_texte_tittre\n")
+	for i in sims:f.write("%s\n" % i)"""
